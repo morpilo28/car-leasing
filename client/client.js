@@ -5,11 +5,10 @@ fetch(carsEndPoint).then(carsData => {
 })
 
 function tableView(carsArray) {
-    console.log(carsArray);
     let html = `<table>
         <thead>
             <tr>
-                <th>מס"ד</th>
+                <th>row</th>
                 <th>name</th>
                 <th>price</th>
                 <th>monthly</th>
@@ -23,7 +22,7 @@ function tableView(carsArray) {
     for (let i = 0; i < carsArray.length && i < 10; i++) {
         html += `
                 <tr>
-                    <td>${i + 1}</td>
+                    <td>${carsArray[i].id}</td>
                     <td>${carsArray[i].name}</td>
                     <td>${carsArray[i].price}</td>
                     <td>${carsArray[i].monthly}</td>
