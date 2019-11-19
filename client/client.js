@@ -1,3 +1,6 @@
+//needs to limit the table rows to 10
+//maybe adding an opption of 'more details'
+
 const carsEndPoint = 'http://localhost:3201/cars';
 
 fetch(carsEndPoint).then(carsData => {
@@ -19,10 +22,10 @@ function tableView(carsArray) {
             </tr>
         </thead>
         <tbody>`;
-    for (let i = 0; i < carsArray.length && i < 10; i++) {
+    for (let i = 0; i < carsArray.length; i++) {
         html += `
                 <tr>
-                    <td>${carsArray[i].id}</td>
+                    <td>${i+1}</td>
                     <td>${carsArray[i].name}</td>
                     <td>${carsArray[i].price}</td>
                     <td>${carsArray[i].monthly}</td>

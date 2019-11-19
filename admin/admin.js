@@ -1,3 +1,7 @@
+//needs to limit table to 10 rows
+//needs to program the whole authentication thing - and access to c.r.u.d only after authentication
+//needs to check for duplicate code
+
 const carsEndPoint = 'http://localhost:3201/cars';
 
 getRequests(carsEndPoint, tableView);
@@ -52,31 +56,7 @@ function addBtnEventListeners(carsArray) {
         $(document).on('click', `#edit${i}`, (e) => {
             e.preventDefault();
             const idx = event.target.id.slice(4);
-            jQuery(`.editable${idx}`).attr('contenteditable', "true");
-            jQuery(`#buttonCell${idx}`).empty().append(`
-            <button id='saveChanges${idx}'>Save</button> <button id='cancelChanges${idx}'>Cancel</button>`);
-
-            $(document).on('click', `#saveChanges${idx}`, (e) => {
-                e.preventDefault();
-                let editedObj = {
-                    name: jQuery(`#name${idx}`).html(),
-                    price: jQuery(`#price${idx}`).html(),
-                    monthly: jQuery(`#monthly${idx}`).html(),
-                    currency: jQuery(`#currency${idx}`).html(),
-                    doors: jQuery(`#doors${idx}`).html(),
-                    seats: jQuery(`#seats${idx}`).html(),
-                    image: jQuery(`#image${idx}`).html(),
-                }
-
-                changeBackToOriginalBtn(idx);
-                otherRequests(singleCarEndPoint, 'PUT', editedObj);
-            });
-
-            $(document).on('click', `#cancelChanges${idx}`, (e) => {
-                e.preventDefault();
-                changeBackToOriginalBtn(idx);
-                getRequests(carsEndPoint, tableView);
-            });
+            onEditCar(idx, singleCarEndPoint);
         });
 
         document.getElementById(`delete${i}`).addEventListener('click', (e) => {
@@ -93,7 +73,35 @@ function addBtnEventListeners(carsArray) {
     }
 }
 
+function onEditCar(idx, singleCarEndPoint) {
+    jQuery(`.editable${idx}`).attr('contenteditable', "true");
+    jQuery(`#buttonCell${idx}`).empty().append(`
+            <button id='saveChanges${idx}'>Save</button> <button id='cancelChanges${idx}'>Cancel</button>`);
+
+    $(document).on('click', `#saveChanges${idx}`, (e) => {
+        e.preventDefault();
+        let editedObj = {
+            name: jQuery(`#name${idx}`).html(),
+            price: jQuery(`#price${idx}`).html(),
+            monthly: jQuery(`#monthly${idx}`).html(),
+            currency: jQuery(`#currency${idx}`).html(),
+            doors: jQuery(`#doors${idx}`).html(),
+            seats: jQuery(`#seats${idx}`).html(),
+            image: jQuery(`#image${idx}`).html(),
+        };
+        changeBackToOriginalBtn(idx);
+        otherRequests(singleCarEndPoint, 'PUT', editedObj);
+    });
+
+    $(document).on('click', `#cancelChanges${idx}`, (e) => {
+        e.preventDefault();
+        changeBackToOriginalBtn(idx);
+        getRequests(carsEndPoint, tableView);
+    });
+}
+
 function changeBackToOriginalBtn(idx) {
+    // when two rows or more are switched, the switching back occurs on all of them (instead of on only one)
     jQuery(`#buttonCell${idx}`).empty().append(`<button id='edit${idx}'>Edit</button>
                 <button id='delete${idx}'>delete</button>
                 <button id='details${idx}'>More Details</button>`);
@@ -113,54 +121,6 @@ function onSaveAddedCar(carsArray) {
         image: document.getElementById(`image${addedCarId}`).value
     };
     otherRequests(carsEndPoint, 'POST', carToAdd);
-}
-
-function onEditCar(idx) {
-    jQuery(`.carForEdit${idx}`).attr('contentEditable', "true");
-    // switch to empty inputs and a save btn
-    //add events listener to a save btn and send it to saveEdit
-    /* saveEdit(idx); */
-}
-
-function OnSaveEdit(idx) {
-    const reqBody = {
-        name: document.getElementById(`name${idx}`).value,
-        price: document.getElementById(`price${idx}`).value,
-        monthly: document.getElementById(`monthly${idx}`).value,
-        currency: document.getElementById(`currency${idx}`).value,
-        doors: document.getElementById(`doors${idx}`).value,
-        seats: document.getElementById(`seats${idx}`).value,
-        image: document.getElementById(`image${idx}`).value
-    }
-
-    fetch(carsEndPoint, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(reqBody)
-    }).then(responseData => {
-
-    }).catch(err => {
-        alert('not inserted');
-    });
-}
-
-function getRequests(endPoint, whenResponse) {
-    fetch(endPoint).then(carsData => {
-        carsData.json().then(whenResponse);
-    })
-}
-
-function otherRequests(endPoint, httpVerb, reqBody, whenResponse) {
-    whenResponse = whenResponse === onEditCar ? onEditCar : tableView;
-    fetch(endPoint, {
-        method: httpVerb,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(reqBody)
-    }).then(responseData => {
-        responseData.json().then(whenResponse);
-    }).catch(err => {
-        alert('not inserted');
-    });
 }
 
 function tableView(carsArray) {
@@ -229,4 +189,23 @@ function tableView(carsArray) {
     document.getElementById('main').innerHTML = html;
 
     addBtnEventListeners(carsArray);
+}
+
+function getRequests(endPoint, whenResponse) {
+    fetch(endPoint).then(carsData => {
+        carsData.json().then(whenResponse);
+    })
+}
+
+function otherRequests(endPoint, httpVerb, reqBody, whenResponse) {
+    whenResponse = whenResponse === onEditCar ? onEditCar : tableView;
+    fetch(endPoint, {
+        method: httpVerb,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(reqBody)
+    }).then(responseData => {
+        responseData.json().then(whenResponse);
+    }).catch(err => {
+        alert('not inserted');
+    });
 }
