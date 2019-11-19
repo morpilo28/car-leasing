@@ -38,14 +38,28 @@ function createOne(objToAdd, callback) {
     })
 }
 
-function updateOne(car, callback) {
+function updateOne(editedObj, callback) {
     fs.readFile(FILE, (e, data) => {
         const fileData = data && data.length > 0 ? JSON.parse(data.toString()) : [];
-        if (e) {
-            callback(e);
-        } else {
-            callback(null, car)
-        }
+        fileData.map((obj) => {
+            if(obj.id === editedObj.id){
+                obj.name = editedObj.name,
+                obj.price = editedObj.price,
+                obj.monthly = editedObj.monthly,
+                obj.currency = editedObj.currency,
+                obj.doors = editedObj.doors,
+                obj.seats = editedObj.seats,
+                obj.image = editedObj.image  
+            }
+        });
+       
+        fs.writeFile(FILE, JSON.stringify(fileData), (e) => {
+            if (e) {
+                callback(e);
+            } else {
+                callback(null, editedObj, fileData)
+            }
+        })
     })
 }
 

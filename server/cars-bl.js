@@ -22,12 +22,6 @@ function getOneCar(id, callback) {
 }
 
 function createOneCar(carToADD, callback) {
-    carToADD.id = Number(carToADD.id);
-    carToADD.price = Number(carToADD.price);
-    carToADD.monthly = Number(carToADD.monthly);
-    carToADD.doors = Number(carToADD.doors);
-    carToADD.seats = Number(carToADD.seats);
-
     dal.createOne(carToADD, (e, carAdded, allCars) => {
         if (e) {
             callback(e);
@@ -37,12 +31,16 @@ function createOneCar(carToADD, callback) {
     })
 }
 
-function updateCar(car, callback) {
-    dal.readAll((err, car) => {
+function updateCar(editedCarData, callback) {
+    editedCarData.price = editedCarData.price === '' || typeof editedCarData.price === 'string' ? 0 : Number(editedCarData.price);
+    editedCarData.monthly = editedCarData.monthly === '' || typeof editedCarData.monthly === 'string' ? 0 : Number(editedCarData.monthly);
+    editedCarData.doors = editedCarData.doors === '' || typeof editedCarData.doors === 'string' ? 0 : Number(editedCarData.doors);
+    editedCarData.seats = editedCarData.seats === '' || typeof editedCarData.seats === 'string' ? 0 : Number(editedCarData.seats);
+    dal.updateOne(editedCarData, (err, editedCarData, allCars) => {
         if (err) {
             callback(err);
         } else {
-            callback(null, car);
+            callback(null, allCars);
         }
     })
 }
