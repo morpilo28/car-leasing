@@ -11,7 +11,6 @@ function getCars(callback) {
 }
 
 function getOneCar(id, callback) {
-
     dal.readOne(id, (err, singleCarData, allCars) => {
         if (err) {
             callback(err);
@@ -32,10 +31,7 @@ function createOneCar(carToADD, callback) {
 }
 
 function updateCar(editedCarData, callback) {
-    editedCarData.price = editedCarData.price === '' || typeof editedCarData.price === 'string' ? 0 : Number(editedCarData.price);
-    editedCarData.monthly = editedCarData.monthly === '' || typeof editedCarData.monthly === 'string' ? 0 : Number(editedCarData.monthly);
-    editedCarData.doors = editedCarData.doors === '' || typeof editedCarData.doors === 'string' ? 0 : Number(editedCarData.doors);
-    editedCarData.seats = editedCarData.seats === '' || typeof editedCarData.seats === 'string' ? 0 : Number(editedCarData.seats);
+    isUsersInputANumber(editedCarData);
     dal.updateOne(editedCarData, (err, editedCarData, allCars) => {
         if (err) {
             callback(err);
@@ -53,6 +49,13 @@ function deleteOneCar(id, callback) {
             callback(null, allCars);
         }
     })
+}
+
+function isUsersInputANumber(editedCarData) {
+    editedCarData.price = editedCarData.price === '' || typeof editedCarData.price === 'string' ? 0 : Number(editedCarData.price);
+    editedCarData.monthly = editedCarData.monthly === '' || typeof editedCarData.monthly === 'string' ? 0 : Number(editedCarData.monthly);
+    editedCarData.doors = editedCarData.doors === '' || typeof editedCarData.doors === 'string' ? 0 : Number(editedCarData.doors);
+    editedCarData.seats = editedCarData.seats === '' || typeof editedCarData.seats === 'string' ? 0 : Number(editedCarData.seats);
 }
 
 module.exports = {

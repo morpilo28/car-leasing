@@ -1,3 +1,5 @@
+//need to write correct responses and maybe use them in client
+
 const express = require('express');
 const app = express();
 const carsBl = require('./cars-bl');
