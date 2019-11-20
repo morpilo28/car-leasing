@@ -3,8 +3,51 @@
 //needs to check for duplicate code
 
 const carsEndPoint = 'http://localhost:3201/cars';
+const tokenEndPoint = 'http://localhost:3201/auth';
+const serviceEndPoint = 'http://localhost:3201/service';
 
-getRequests(carsEndPoint, tableView);
+/* getTokens(); */
+
+getFullList();
+/* function getTokens() {
+    document.getElementById('api').addEventListener('click', function () {
+        fetch(serviceEndPoint, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'bearer ' + window.localStorage.getItem('token')
+            }
+        }).then(res => {
+            res.text().then(res => {
+                console.log(res)
+                getRequests(carsEndPoint, tableView);
+            })
+        })
+    })
+
+    document.getElementById('send').addEventListener('click', function () {
+        const params = {
+            user: document.getElementById('user').value,
+            pass: document.getElementById('pass').value
+        };
+        fetch(tokenEndPoint, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'basic ' + btoa(params.user + ':' + params.pass)
+            }
+        }).then(res => {
+            delete params;
+            res.text().then(token => {
+                console.log(token);
+                window.localStorage.setItem('token', token);
+            })
+        })
+    })
+} */
+
+function getFullList() {
+    getRequests(carsEndPoint, tableView);
+}
 
 function onMoreDetails(responseObj) {
     let html = `
@@ -144,18 +187,18 @@ function tableView(carsArray) {
             </thead>
             <tbody id='carsTableBody'>
                 <tr id='addCarRow' class="addCarRow">
-                    <td>
+                    <td class='addCarCells'>
                         <input value='${carsArray.length + 1}' disabled readonly'/>
                         <input id='addedCarId${addedCarId}' type='hidden' value='${addedCarId}'/>
                     </td>
-                    <td><input id='name${addedCarId}' placeholder = 'name'></td>
-                    <td><input type='number' min='0' id='price${addedCarId}' placeholder = 'price'></td>
-                    <td><input type='number' min='0' id='monthly${addedCarId}' placeholder = 'monthly'></td>
-                    <td><input id='currency${addedCarId}' placeholder = 'currency'></td>
-                    <td><input type='number' min='0' id='doors${addedCarId}' placeholder = 'doors'></td>
-                    <td><input type='number' min='0' id='seats${addedCarId}' placeholder = 'seats'></td>
-                    <td><input id='image${addedCarId}' placeholder = 'image'></td>
-                    <td>
+                    <td class='addCarCells'><input id='name${addedCarId}' placeholder = 'name'></td>
+                    <td class='addCarCells'><input type='number' min='0' id='price${addedCarId}' placeholder = 'price'></td>
+                    <td class='addCarCells'><input type='number' min='0' id='monthly${addedCarId}' placeholder = 'monthly'></td>
+                    <td class='addCarCells'><input id='currency${addedCarId}' placeholder = 'currency'></td>
+                    <td class='addCarCells'><input type='number' min='0' id='doors${addedCarId}' placeholder = 'doors'></td>
+                    <td class='addCarCells'><input type='number' min='0' id='seats${addedCarId}' placeholder = 'seats'></td>
+                    <td class='addCarCells'><input id='image${addedCarId}' placeholder = 'image'></td>
+                    <td class='addCarCells'>
                         <button id='saveAddedCar'>Save</button>
                         <button id='hideAddField'>Hide Add Field</button>
                     </td>
@@ -164,7 +207,7 @@ function tableView(carsArray) {
         const id = carsArray[i].id;
         html += `
             <tr>
-                <td>${i + 1}
+                <td><b>${i + 1}</b>
                     <input id='id${i}' value='${id}' type='hidden'/>
                 </td>
                 <td class='editable${i}' id='name${i}'>${carsArray[i].name}</td>

@@ -31,7 +31,7 @@ function createOneCar(carToADD, callback) {
 }
 
 function updateCar(editedCarData, callback) {
-    isUsersInputANumber(editedCarData);
+    /* isUsersInputANumber(editedCarData); */
     dal.updateOne(editedCarData, (err, editedCarData, allCars) => {
         if (err) {
             callback(err);
@@ -52,6 +52,7 @@ function deleteOneCar(id, callback) {
 }
 
 function isUsersInputANumber(editedCarData) {
+    //all get here as a string even if it's a number
     editedCarData.price = editedCarData.price === '' || typeof editedCarData.price === 'string' ? 0 : Number(editedCarData.price);
     editedCarData.monthly = editedCarData.monthly === '' || typeof editedCarData.monthly === 'string' ? 0 : Number(editedCarData.monthly);
     editedCarData.doors = editedCarData.doors === '' || typeof editedCarData.doors === 'string' ? 0 : Number(editedCarData.doors);
