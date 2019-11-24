@@ -7,6 +7,7 @@ const atob = require('atob');
 const jwt = require('jsonwebtoken'); */
 const app = express();
 const carsBl = require('./cars-bl');
+const tokensBl = require('./token-bl');
 const PORT = 3201;
 const cors = require('cors');
 
@@ -100,8 +101,20 @@ app.delete('/cars/:id', (req, res) => {
     })
 })
 
-/* app.post('/auth', function (req, res) {
-    const { user, pass } = splitCredentials(req.headers.authorization);
+app.post('/login', function (req, res) {
+    const userToValidate = {
+        user: req.body.user,
+        pass: req.body.pass,
+        token: req.headers.authorization
+    }
+    tokensBl.getUser(userToValidate, (e, user) => {
+        if (e) {
+            return res.status(500).send();
+        } else {
+            return res.send();
+        }
+    })
+    /*    const { user, pass } = splitCredentials(req.headers.authorization);
     if (!user) {
         res.status(403).send();
     } else {
@@ -116,7 +129,38 @@ app.delete('/cars/:id', (req, res) => {
         } else {
             res.status(403).send();
         }
+    } */
+});
+
+app.post('/register', function (req, res) {
+    const userToAdd = {
+        user: req.body.user,
+        pass: req.body.pass,
+        token: req.headers.authorization
     }
+    tokensBl.registerUser(userToAdd, (e, user, allUsers) => {
+        if (e) {
+            return res.status(500).send();
+        } else {
+            return res.send();
+        }
+    })
+    /*    const { user, pass } = splitCredentials(req.headers.authorization);
+    if (!user) {
+        res.status(403).send();
+    } else {
+        if (user === 'student' && pass === 'pass123') {
+            const token = jwt.sign({
+                user: user,
+            }, 'shhhhh',
+                {
+                    expiresIn: '365d'
+                });
+            res.send(token);
+        } else {
+            res.status(403).send();
+        }
+    } */
 });
 
 app.get('/service', function (req, res) {
@@ -134,7 +178,7 @@ function splitCredentials(str) {
         return authHeader[1];
     }
 }
- */
+
 app.listen(process.env.PORT || PORT, () =>
     console.log(`Example app listening on port ${process.env.PORT || PORT}!`),
 );

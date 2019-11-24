@@ -3,47 +3,39 @@
 //needs to check for duplicate code
 
 const carsEndPoint = 'http://localhost:3201/cars';
-const tokenEndPoint = 'http://localhost:3201/auth';
+const loginEndPoint = 'http://localhost:3201/login';
+const registerEndPoint = 'http://localhost:3201/register';
 const serviceEndPoint = 'http://localhost:3201/service';
 
-/* getTokens(); */
-
-getFullList();
-/* function getTokens() {
-    document.getElementById('api').addEventListener('click', function () {
-        fetch(serviceEndPoint, {
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'bearer ' + window.localStorage.getItem('token')
-            }
-        }).then(res => {
-            res.text().then(res => {
-                console.log(res)
-                getRequests(carsEndPoint, tableView);
-            })
+navbarEventListeners();
+function navbarEventListeners(e) {
+    const links = document.querySelectorAll('#nav a[data-href]');
+    for (let i = 0; i < links.length; i++) {
+        links[i].addEventListener('click', (e) => {
+            e.preventDefault();
+            navigate(e.target.dataset.href);
         })
-    })
+    }
+}
 
-    document.getElementById('send').addEventListener('click', function () {
-        const params = {
-            user: document.getElementById('user').value,
-            pass: document.getElementById('pass').value
-        };
-        fetch(tokenEndPoint, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'basic ' + btoa(params.user + ':' + params.pass)
-            }
-        }).then(res => {
-            delete params;
-            res.text().then(token => {
-                console.log(token);
-                window.localStorage.setItem('token', token);
-            })
-        })
-    })
-} */
+function navigate(url) {
+    document.getElementById('main').innerHTML = '';
+    switch (url) {
+        case 'register':
+            jQuery('#main').append(registerView());
+            register();
+            break;
+        case 'login':
+            jQuery('#main').append(loginView());
+            userValidation();
+            break;
+        case 'table':
+            const tableView = getFullList();
+            jQuery('#main').append(tableView);
+            break;
+    }
+}
+/* getFullList(); */
 
 function getFullList() {
     getRequests(carsEndPoint, tableView);
@@ -167,7 +159,6 @@ function onSaveAddedCar(carsArray) {
 }
 
 function tableView(carsArray) {
-    console.log(carsArray);
     const addedCarId = carsArray[carsArray.length - 1].id + 1;
     let html = `
         <button id='add'>Add Car</button>
@@ -232,6 +223,7 @@ function tableView(carsArray) {
     document.getElementById('main').innerHTML = html;
 
     addBtnEventListeners(carsArray);
+    return html;
 }
 
 function getRequests(endPoint, whenResponse) {
@@ -251,4 +243,79 @@ function otherRequests(endPoint, httpVerb, reqBody, whenResponse) {
     }).catch(err => {
         alert('not inserted');
     });
+}
+
+function loginView() {
+    const html = `
+    <div>
+    <h2>Login</h2>
+        <label>user: <input id='user'></label>
+        <label>password: <input id='pass' type='password'></label>
+        <button id='login'>Login</button>
+    </div>
+    `
+    return html;
+}
+
+function registerView() {
+    const html = `
+    <h2>Register</h2>
+    <div>
+        <label>user: <input id='user'></label>
+        <label>password: <input id='pass' type='password'></label>
+        <button id='register'>Register</button>
+    </div>
+    `
+    return html;
+}
+
+function register() {
+    document.getElementById('register').addEventListener('click', function () {
+        const params = {
+            user: document.getElementById('user').value,
+            pass: document.getElementById('pass').value
+        };
+        fetch(registerEndPoint, {
+            method: 'POST',
+            body: JSON.stringify({
+                user: params.user,
+                pass: params.pass
+            }),
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'basic ' + btoa(params.user + ':' + params.pass)
+            },
+        }).then(res => {
+            document.getElementById('user').value = '';
+            document.getElementById('pass').value = '';
+        })
+    })
+}
+
+function userValidation() {
+    document.getElementById('login').addEventListener('click', function () {
+        const params = {
+            user: document.getElementById('user').value,
+            pass: document.getElementById('pass').value
+        };
+        fetch(loginEndPoint, {
+            method: 'POST',
+            body: JSON.stringify({
+                user: params.user,
+                pass: params.pass
+            }),
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'basic ' + btoa(params.user + ':' + params.pass)
+            },
+        }).then(res => {
+            document.getElementById('user').value = '';
+            document.getElementById('pass').value = '';
+            console.log(typeof res);
+            res.text().then(token => {
+                console.log(token);
+                window.localStorage.setItem('token', token);
+            })
+        })
+    })
 }

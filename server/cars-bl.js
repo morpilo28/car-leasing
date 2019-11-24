@@ -1,6 +1,8 @@
 const dal = require('./dal');
+const FILE = './db/cars.json';
 
 function getCars(callback) {
+    dal.setDatabase(FILE);
     dal.readAll((err, carsData) => {
         if (err) {
             callback(err);
@@ -11,7 +13,8 @@ function getCars(callback) {
 }
 
 function getOneCar(id, callback) {
-    dal.readOne(id, (err, singleCarData, allCars) => {
+    dal.setDatabase(FILE);
+    dal.readOne(id, 'id', (err, singleCarData, allCars) => {
         if (err) {
             callback(err);
         } else {
@@ -21,6 +24,7 @@ function getOneCar(id, callback) {
 }
 
 function createOneCar(carToADD, callback) {
+    dal.setDatabase(FILE);
     dal.createOne(carToADD, (e, carAdded, allCars) => {
         if (e) {
             callback(e);
@@ -31,6 +35,7 @@ function createOneCar(carToADD, callback) {
 }
 
 function updateCar(editedCarData, callback) {
+    dal.setDatabase(FILE);
     /* isUsersInputANumber(editedCarData); */
     dal.updateOne(editedCarData, (err, editedCarData, allCars) => {
         if (err) {
@@ -42,6 +47,7 @@ function updateCar(editedCarData, callback) {
 }
 
 function deleteOneCar(id, callback) {
+    dal.setDatabase(FILE);
     dal.deleteOne(id, (e, allCars) => {
         if (e) {
             callback(e);
