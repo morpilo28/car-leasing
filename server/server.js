@@ -3,14 +3,15 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 /* const path = require('path');
-const atob = require('atob');
-const jwt = require('jsonwebtoken'); */
+const atob = require('atob');*/
+const jwt = require('jsonwebtoken');
 const app = express();
 const carsBl = require('./cars-bl');
 const tokensBl = require('./token-bl');
+const usersModel = require('./models/userModel');
 const PORT = 3201;
 const cors = require('cors');
-
+const SECRET_KEY_FOR_JWT = '687d6f87sd6f87sd6f78sd6f87sd';
 /* app.use(express.static(path.join(__dirname, 'public'))); */
 app.use(bodyParser.json());
 app.use(cors());
@@ -105,62 +106,37 @@ app.post('/login', function (req, res) {
     const userToValidate = {
         user: req.body.user,
         pass: req.body.pass,
-        token: req.headers.authorization
     }
-    tokensBl.getUser(userToValidate, (e, user) => {
+    tokensBl.validateUser(userToValidate, (e, user) => {
         if (e) {
-            return res.status(500).send();
+            return res.status(500).send('no user has been found');
         } else {
-            return res.send();
+            return res.send(user.token);
         }
     })
-    /*    const { user, pass } = splitCredentials(req.headers.authorization);
-    if (!user) {
-        res.status(403).send();
-    } else {
-        if (user === 'student' && pass === 'pass123') {
-            const token = jwt.sign({
-                user: user,
-            }, 'shhhhh',
-                {
-                    expiresIn: '365d'
-                });
-            res.send(token);
-        } else {
-            res.status(403).send();
-        }
-    } */
 });
 
 app.post('/register', function (req, res) {
-    const userToAdd = {
-        user: req.body.user,
-        pass: req.body.pass,
-        token: req.headers.authorization
-    }
-    tokensBl.registerUser(userToAdd, (e, user, allUsers) => {
-        if (e) {
-            return res.status(500).send();
-        } else {
-            return res.send();
+    const token = jwt.sign({
+        user: req.body.user
+    }, SECRET_KEY_FOR_JWT,
+        {
+            expiresIn: '365d'
+        });
+    const userToAdd = new usersModel.Users(req.body.user, req.body.pass, token);
+    tokensBl.isUserNameAlreadyExist(userToAdd, (e)=>{
+        if(e){
+            res.status(500).send(e);
+        }else{
+            tokensBl.registerUser(userToAdd, (e, user, allUsers) => {
+                if (e) {
+                    return res.status(500).send();
+                } else {
+                    return res.send();
+                }
+            })
         }
     })
-    /*    const { user, pass } = splitCredentials(req.headers.authorization);
-    if (!user) {
-        res.status(403).send();
-    } else {
-        if (user === 'student' && pass === 'pass123') {
-            const token = jwt.sign({
-                user: user,
-            }, 'shhhhh',
-                {
-                    expiresIn: '365d'
-                });
-            res.send(token);
-        } else {
-            res.status(403).send();
-        }
-    } */
 });
 
 app.get('/service', function (req, res) {

@@ -1,25 +1,18 @@
-.addCarRow{
+.addCarRow {
     display: none;
 }
 
-td,th{
+td,
+th {
     padding: 5px 15px 5px 15px;
 }
 
-thead, td{
+thead,
+td {
     text-align: center;
 }
 
-/* 
-input{
-    width: 10px;
-    margin: 2px;
+a.disable {
+    pointer-events: none;
+    cursor: default;
 }
-
-.addCarRow{
-    padding: 0px;
-} */
-
-/* table, th,td{
-    border: 1px solid black;
-} */

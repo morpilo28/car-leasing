@@ -6,8 +6,16 @@ const carsEndPoint = 'http://localhost:3201/cars';
 const loginEndPoint = 'http://localhost:3201/login';
 const registerEndPoint = 'http://localhost:3201/register';
 const serviceEndPoint = 'http://localhost:3201/service';
+const TOKEN_LOCAL_STORAGE_KEY = 'token';
+var methods = {
+    GET: 'GET',
+    POST: 'POST',
+    DELETE:'DELETE',
+    PUT:'PUT'
+}
 
 navbarEventListeners();
+
 function navbarEventListeners(e) {
     const links = document.querySelectorAll('#nav a[data-href]');
     for (let i = 0; i < links.length; i++) {
@@ -19,23 +27,20 @@ function navbarEventListeners(e) {
 }
 
 function navigate(url) {
-    document.getElementById('main').innerHTML = '';
+    printToHtml('');
     switch (url) {
         case 'register':
-            jQuery('#main').append(registerView());
-            register();
+            registerView();
             break;
         case 'login':
-            jQuery('#main').append(loginView());
-            userValidation();
+            loginView();
             break;
-        case 'table':
-            const tableView = getFullList();
-            jQuery('#main').append(tableView);
+        case 'cars':
+            jQuery('a.disable').css('pointer-events', 'all');
+            getFullList();
             break;
     }
 }
-/* getFullList(); */
 
 function getFullList() {
     getRequests(carsEndPoint, tableView);
@@ -61,7 +66,7 @@ function onMoreDetails(responseObj) {
             <button id='returnToFullList'>Return To Full List</button>
             </div>
             `
-    document.getElementById('main').innerHTML = html;
+    printToHtml(html);
 
     document.getElementById('returnToFullList').addEventListener('click', (e) => {
         e.preventDefault();
@@ -98,7 +103,7 @@ function addBtnEventListeners(carsArray) {
             e.preventDefault();
             const idx = event.target.id.slice(6);
             const id = { id: carsArray[idx].id };
-            otherRequests(singleCarEndPoint, 'DELETE', id);
+            otherRequests(singleCarEndPoint, methods.DELETE, id);
         });
 
         document.getElementById(`details${i}`).addEventListener('click', (e) => {
@@ -125,7 +130,7 @@ function onEditCar(idx, singleCarEndPoint) {
             image: jQuery(`#image${idx}`).html(),
         };
         changeBackToOriginalBtn(idx);
-        otherRequests(singleCarEndPoint, 'PUT', editedObj);
+        otherRequests(singleCarEndPoint, methods.PUT, editedObj);
     });
 
     $(document).on('click', `#cancelChanges${idx}`, (e) => {
@@ -155,7 +160,7 @@ function onSaveAddedCar(carsArray) {
         seats: document.getElementById(`seats${addedCarId}`).value,
         image: document.getElementById(`image${addedCarId}`).value
     };
-    otherRequests(carsEndPoint, 'POST', carToAdd);
+    otherRequests(carsEndPoint, methods.POST, carToAdd);
 }
 
 function tableView(carsArray) {
@@ -220,15 +225,14 @@ function tableView(carsArray) {
             </table>
             <button id='prev'>Prev</button>
             <button id-'next'>Next</button>`;
-    document.getElementById('main').innerHTML = html;
+    printToHtml(html);
 
     addBtnEventListeners(carsArray);
-    return html;
 }
 
 function getRequests(endPoint, whenResponse) {
-    fetch(endPoint).then(carsData => {
-        carsData.json().then(whenResponse);
+    fetch(endPoint).then(data => {
+        data.json().then(whenResponse);
     })
 }
 
@@ -245,77 +249,91 @@ function otherRequests(endPoint, httpVerb, reqBody, whenResponse) {
     });
 }
 
-function loginView() {
+function loginView(note) {
+    note = note ? note : '';
     const html = `
     <div>
     <h2>Login</h2>
+    <p>${note}</p>
         <label>user: <input id='user'></label>
         <label>password: <input id='pass' type='password'></label>
         <button id='login'>Login</button>
     </div>
     `
-    return html;
+    printToHtml(html);
+    document.getElementById('login').addEventListener('click', loginValidation);
 }
 
-function registerView() {
+function registerView(note) {
+    note = note ? note : '';
     const html = `
     <h2>Register</h2>
+    <p>${note}</p>
     <div>
         <label>user: <input id='user'></label>
         <label>password: <input id='pass' type='password'></label>
         <button id='register'>Register</button>
     </div>
     `
-    return html;
+    printToHtml(html);
+    document.getElementById('register').addEventListener('click', register);
 }
 
 function register() {
-    document.getElementById('register').addEventListener('click', function () {
-        const params = {
-            user: document.getElementById('user').value,
-            pass: document.getElementById('pass').value
-        };
-        fetch(registerEndPoint, {
-            method: 'POST',
-            body: JSON.stringify({
-                user: params.user,
-                pass: params.pass
-            }),
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'basic ' + btoa(params.user + ':' + params.pass)
-            },
-        }).then(res => {
-            document.getElementById('user').value = '';
-            document.getElementById('pass').value = '';
+    const params = {
+        user: document.getElementById('user').value,
+        pass: document.getElementById('pass').value
+    };
+
+    fetch(registerEndPoint, {
+        method: methods.POST,
+        body: JSON.stringify({
+            user: params.user,
+            pass: params.pass
+        }),
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    }).then(res => {
+        document.getElementById('user').value = '';
+        document.getElementById('pass').value = '';
+        if (res.status === 500) {
+            registerView('user name taken. please select a different name');
+        } else {
+            registerView('registration succeeded');
+        }
+    })
+}
+
+function loginValidation() {
+    const params = {
+        user: document.getElementById('user').value,
+        pass: document.getElementById('pass').value
+    };
+    fetch(loginEndPoint, {
+        method: methods.POST,
+        body: JSON.stringify({
+            user: params.user,
+            pass: params.pass
+        }),
+        headers: {
+            'Content-Type': 'application/json',
+            //'Authorization': 'basic ' + btoa(params.user + ':' + params.pass)
+        },
+    }).then(res => {
+        document.getElementById('user').value = '';
+        document.getElementById('pass').value = '';
+        if (res.status === 500) {
+            loginView('User Not Found');
+        } else {
+            navigate('cars');
+        }
+        res.text().then(token => {
+            localStorage.setItem(TOKEN_LOCAL_STORAGE_KEY, token);
         })
     })
 }
 
-function userValidation() {
-    document.getElementById('login').addEventListener('click', function () {
-        const params = {
-            user: document.getElementById('user').value,
-            pass: document.getElementById('pass').value
-        };
-        fetch(loginEndPoint, {
-            method: 'POST',
-            body: JSON.stringify({
-                user: params.user,
-                pass: params.pass
-            }),
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'basic ' + btoa(params.user + ':' + params.pass)
-            },
-        }).then(res => {
-            document.getElementById('user').value = '';
-            document.getElementById('pass').value = '';
-            console.log(typeof res);
-            res.text().then(token => {
-                console.log(token);
-                window.localStorage.setItem('token', token);
-            })
-        })
-    })
+function printToHtml(html) {
+    document.getElementById('main').innerHTML = html;
 }

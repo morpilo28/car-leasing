@@ -15,18 +15,10 @@ function readAll(callback) {
     })
 }
 
-function readOne(value, key, callback) {
+function readOne(id, callback) {
     fs.readFile(FILE, (e, data) => {
-        let singleObj = {};
         const fileData = data && data.length > 0 ? JSON.parse(data.toString()) : [];
-        if(key === 'id'){
-            singleObj = fileData.find((obj) => obj.id === value);
-        }else if(key === 'userName'){
-            singleObj = fileData.find((obj) => obj.user === value);
-            if(!singleObj){
-                singleObj = 'no user has been found';
-            }
-        }
+        const singleObj = fileData.find((obj) => obj.id === id);
         if (e) {
             callback(e);
         } else {

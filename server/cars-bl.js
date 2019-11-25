@@ -14,7 +14,7 @@ function getCars(callback) {
 
 function getOneCar(id, callback) {
     dal.setDatabase(FILE);
-    dal.readOne(id, 'id', (err, singleCarData, allCars) => {
+    dal.readOne(id, (err, singleCarData, allCars) => {
         if (err) {
             callback(err);
         } else {
