@@ -2,16 +2,21 @@
 //needs to program the whole authentication thing - and access to c.r.u.d only after authentication
 //needs to check for duplicate code
 
-const carsEndPoint = 'http://localhost:3201/cars';
+const END_POINTS = {
+    cars: 'cars',
+    login:'login',
+    register:'register',
+}
+
 const loginEndPoint = 'http://localhost:3201/login';
 const registerEndPoint = 'http://localhost:3201/register';
-const serviceEndPoint = 'http://localhost:3201/service';
 const TOKEN_LOCAL_STORAGE_KEY = 'token';
-var methods = {
+
+var METHODS = {
     GET: 'GET',
     POST: 'POST',
-    DELETE:'DELETE',
-    PUT:'PUT'
+    DELETE: 'DELETE',
+    PUT: 'PUT'
 }
 
 navbarEventListeners();
@@ -36,14 +41,13 @@ function navigate(url) {
             loginView();
             break;
         case 'cars':
-            jQuery('a.disable').css('pointer-events', 'all');
-            getFullList();
+            httpRequests(END_POINTS.cars, METHODS.GET, null, tableView);
+            break;
+        case 'logout':
+            localStorage.removeItem(TOKEN_LOCAL_STORAGE_KEY);
+            navigate('login');
             break;
     }
-}
-
-function getFullList() {
-    getRequests(carsEndPoint, tableView);
 }
 
 function onMoreDetails(responseObj) {
@@ -91,7 +95,7 @@ function addBtnEventListeners(carsArray) {
         jQuery('.addCarRow').attr('style', 'display: none');
     });
     for (let i = 0; i < carsArray.length; i++) {
-        const singleCarEndPoint = `http://localhost:3201/cars/${carsArray[i].id}`;
+        const singleCarEndPoint = `cars/${carsArray[i].id}`;
 
         $(document).on('click', `#edit${i}`, (e) => {
             e.preventDefault();
@@ -103,12 +107,12 @@ function addBtnEventListeners(carsArray) {
             e.preventDefault();
             const idx = event.target.id.slice(6);
             const id = { id: carsArray[idx].id };
-            otherRequests(singleCarEndPoint, methods.DELETE, id);
+            httpRequests(singleCarEndPoint, METHODS.DELETE, id, tableView);
         });
 
         document.getElementById(`details${i}`).addEventListener('click', (e) => {
             e.preventDefault();
-            getRequests(singleCarEndPoint, onMoreDetails);
+            httpRequests(singleCarEndPoint, METHODS.GET, null, onMoreDetails);
         });
     }
 }
@@ -130,13 +134,13 @@ function onEditCar(idx, singleCarEndPoint) {
             image: jQuery(`#image${idx}`).html(),
         };
         changeBackToOriginalBtn(idx);
-        otherRequests(singleCarEndPoint, methods.PUT, editedObj);
+        httpRequests(singleCarEndPoint, METHODS.PUT, editedObj, tableView);
     });
 
     $(document).on('click', `#cancelChanges${idx}`, (e) => {
         e.preventDefault();
         changeBackToOriginalBtn(idx);
-        getRequests(carsEndPoint, tableView);
+        httpRequests(END_POINTS.cars, METHODS.GET, null, tableView);
     });
 }
 
@@ -160,7 +164,7 @@ function onSaveAddedCar(carsArray) {
         seats: document.getElementById(`seats${addedCarId}`).value,
         image: document.getElementById(`image${addedCarId}`).value
     };
-    otherRequests(carsEndPoint, methods.POST, carToAdd);
+    httpRequests(END_POINTS.cars, METHODS.POST, carToAdd, tableView);
 }
 
 function tableView(carsArray) {
@@ -230,38 +234,31 @@ function tableView(carsArray) {
     addBtnEventListeners(carsArray);
 }
 
-function getRequests(endPoint, whenResponse) {
-    fetch(endPoint).then(data => {
-        data.json().then(whenResponse);
-    })
-}
+function httpRequests(endPoint, httpVerb, reqBody, whenResponse) {
+    const endPointStart = `http://localhost:3201/`;
+    console.log(endPointStart+endPoint);
+    const headers = { 'Content-Type': 'application/json' }
+    if (localStorage.getItem(TOKEN_LOCAL_STORAGE_KEY)) {
+        headers['Authorization'] = 'bearer ' + localStorage.getItem(TOKEN_LOCAL_STORAGE_KEY);
+    }
 
-function otherRequests(endPoint, httpVerb, reqBody, whenResponse) {
-    whenResponse = whenResponse === onEditCar ? onEditCar : tableView;
-    fetch(endPoint, {
+    const fetchOptions = {
         method: httpVerb,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(reqBody)
-    }).then(responseData => {
+        headers: headers,
+    }
+
+    if (httpVerb === METHODS.DELETE || httpVerb === METHODS.POST || httpVerb === METHODS.PUT && reqBody) {
+        fetchOptions['body'] = JSON.stringify(reqBody);
+    }
+
+    fetch(endPointStart+endPoint, fetchOptions).then(responseData => {
+        if(responseData.status === 500 || responseData.status === 401){
+            document.getElementById('main').innerHTML = 'area for members only';
+        }
         responseData.json().then(whenResponse);
     }).catch(err => {
         alert('not inserted');
     });
-}
-
-function loginView(note) {
-    note = note ? note : '';
-    const html = `
-    <div>
-    <h2>Login</h2>
-    <p>${note}</p>
-        <label>user: <input id='user'></label>
-        <label>password: <input id='pass' type='password'></label>
-        <button id='login'>Login</button>
-    </div>
-    `
-    printToHtml(html);
-    document.getElementById('login').addEventListener('click', loginValidation);
 }
 
 function registerView(note) {
@@ -286,7 +283,7 @@ function register() {
     };
 
     fetch(registerEndPoint, {
-        method: methods.POST,
+        method: METHODS.POST,
         body: JSON.stringify({
             user: params.user,
             pass: params.pass
@@ -305,20 +302,31 @@ function register() {
     })
 }
 
+function loginView(note) {
+    note = note ? note : '';
+    const html = `
+    <div>
+    <h2>Login</h2>
+    <p>${note}</p>
+        <label>user: <input id='user'></label>
+        <label>password: <input id='pass' type='password'></label>
+        <button id='login'>Login</button>
+    </div>
+    `
+    printToHtml(html);
+    document.getElementById('login').addEventListener('click', loginValidation);
+}
+
 function loginValidation() {
     const params = {
         user: document.getElementById('user').value,
         pass: document.getElementById('pass').value
     };
     fetch(loginEndPoint, {
-        method: methods.POST,
-        body: JSON.stringify({
-            user: params.user,
-            pass: params.pass
-        }),
+        method: METHODS.POST,
+        body: JSON.stringify(params),
         headers: {
             'Content-Type': 'application/json',
-            //'Authorization': 'basic ' + btoa(params.user + ':' + params.pass)
         },
     }).then(res => {
         document.getElementById('user').value = '';
@@ -326,11 +334,11 @@ function loginValidation() {
         if (res.status === 500) {
             loginView('User Not Found');
         } else {
+            res.text().then(token => {
+                localStorage.setItem(TOKEN_LOCAL_STORAGE_KEY, token);
+            })
             navigate('cars');
         }
-        res.text().then(token => {
-            localStorage.setItem(TOKEN_LOCAL_STORAGE_KEY, token);
-        })
     })
 }
 
