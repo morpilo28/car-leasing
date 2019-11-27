@@ -110,7 +110,7 @@ app.post('/login', function (req, res) {
     }
     tokensBl.validateUser(userToValidate, (e, user) => {
         if (e) {
-            return res.status(500).send('no user has been found');
+            return res.status(401).send('no user has been found');
         } else {
             const token = jwt.sign({
                 user: req.body.user

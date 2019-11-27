@@ -2,10 +2,12 @@
 //needs to program the whole authentication thing - and access to c.r.u.d only after authentication
 //needs to check for duplicate code
 
+const endPointStart = `http://localhost:3201/`;
+
 const END_POINTS = {
     cars: 'cars',
-    login:'login',
-    register:'register',
+    login: 'login',
+    register: 'register',
 }
 
 var METHODS = {
@@ -39,7 +41,11 @@ function navigate(url) {
             loginView();
             break;
         case 'cars':
-            httpRequests(END_POINTS.cars, METHODS.GET, null, tableView);
+            httpRequests(END_POINTS.cars, METHODS.GET).then(res => tableView(res)).catch(status => {
+                if (status === 500 || status === 401) {
+                    document.getElementById('main').innerHTML = 'area for members only';
+                }
+            });
             break;
         case 'logout':
             localStorage.removeItem(TOKEN_LOCAL_STORAGE_KEY);
@@ -105,12 +111,12 @@ function addBtnEventListeners(carsArray) {
             e.preventDefault();
             const idx = event.target.id.slice(6);
             const id = { id: carsArray[idx].id };
-            httpRequests(singleCarEndPoint, METHODS.DELETE, id, tableView);
+            httpRequests(singleCarEndPoint, METHODS.DELETE, id).then(res => tableView(res));
         });
 
         document.getElementById(`details${i}`).addEventListener('click', (e) => {
             e.preventDefault();
-            httpRequests(singleCarEndPoint, METHODS.GET, null, onMoreDetails);
+            httpRequests(singleCarEndPoint, METHODS.GET, null).then(res => onMoreDetails(res));
         });
     }
 }
@@ -132,13 +138,13 @@ function onEditCar(idx, singleCarEndPoint) {
             image: jQuery(`#image${idx}`).html(),
         };
         changeBackToOriginalBtn(idx);
-        httpRequests(singleCarEndPoint, METHODS.PUT, editedObj, tableView);
+        httpRequests(singleCarEndPoint, METHODS.PUT, editedObj).then(res => tableView(res));
     });
 
     $(document).on('click', `#cancelChanges${idx}`, (e) => {
         e.preventDefault();
         changeBackToOriginalBtn(idx);
-        httpRequests(END_POINTS.cars, METHODS.GET, null, tableView);
+        httpRequests(END_POINTS.cars, METHODS.GET, null).then(res => tableView(res));
     });
 }
 
@@ -162,7 +168,7 @@ function onSaveAddedCar(carsArray) {
         seats: document.getElementById(`seats${addedCarId}`).value,
         image: document.getElementById(`image${addedCarId}`).value
     };
-    httpRequests(END_POINTS.cars, METHODS.POST, carToAdd, tableView);
+    httpRequests(END_POINTS.cars, METHODS.POST, carToAdd).then(res => tableView(res));
 }
 
 function tableView(carsArray) {
@@ -232,31 +238,41 @@ function tableView(carsArray) {
     addBtnEventListeners(carsArray);
 }
 
-function httpRequests(endPoint, httpVerb, reqBody, whenResponse) {
-    const endPointStart = `http://localhost:3201/`;
-    console.log(endPointStart+endPoint);
-    const headers = { 'Content-Type': 'application/json' }
-    if (localStorage.getItem(TOKEN_LOCAL_STORAGE_KEY)) {
-        headers['Authorization'] = 'bearer ' + localStorage.getItem(TOKEN_LOCAL_STORAGE_KEY);
-    }
+function httpRequests(endPoint, httpVerb, reqBody) {
+    return new Promise((resolve, reject) => {
 
-    const fetchOptions = {
-        method: httpVerb,
-        headers: headers,
-    }
-
-    if (httpVerb === METHODS.DELETE || httpVerb === METHODS.POST || httpVerb === METHODS.PUT && reqBody) {
-        fetchOptions['body'] = JSON.stringify(reqBody);
-    }
-
-    fetch(endPointStart+endPoint, fetchOptions).then(responseData => {
-        if(responseData.status === 500 || responseData.status === 401){
-            document.getElementById('main').innerHTML = 'area for members only';
+        const headers = { 'Content-Type': 'application/json' }
+        if (localStorage.getItem(TOKEN_LOCAL_STORAGE_KEY)) {
+            headers['Authorization'] = 'bearer ' + localStorage.getItem(TOKEN_LOCAL_STORAGE_KEY);
         }
-        responseData.json().then(whenResponse);
-    }).catch(err => {
-        alert('not inserted');
-    });
+
+        const fetchOptions = {
+            method: httpVerb,
+            headers: headers,
+        }
+
+        if (httpVerb === METHODS.DELETE || httpVerb === METHODS.POST || httpVerb === METHODS.PUT && reqBody) {
+            fetchOptions['body'] = JSON.stringify(reqBody);
+        }
+
+        fetch(endPointStart + endPoint, fetchOptions).then(responseData => {
+            const dataType = responseData.headers.get('content-type');
+            if (responseData.status === 500 || responseData.status === 401) {
+                reject(responseData.status);
+            }
+
+            //TODO: what happens when dataType is null
+            if (dataType.indexOf('json') > -1) {
+                responseData.json().then(res => resolve(res));
+            } else if (dataType.indexOf('text') > -1) {
+                responseData.text().then(res => resolve(res));
+            } else {
+                console.log('no match');
+            }
+
+
+        });
+    })
 }
 
 function registerView(note) {
@@ -275,27 +291,22 @@ function registerView(note) {
 }
 
 function register() {
-    const endPointStart = `http://localhost:3201/`;
     const params = {
         user: document.getElementById('user').value,
         pass: document.getElementById('pass').value
     };
 
-    fetch(endPointStart + END_POINTS.register, {
-        method: METHODS.POST,
-        body: JSON.stringify(params),
-        headers: {
-            'Content-Type': 'application/json',
-        },
-    }).then(res => {
+    httpRequests(END_POINTS.register, METHODS.POST, params).then(res => {
         document.getElementById('user').value = '';
         document.getElementById('pass').value = '';
-        if (res.status === 500) {
+
+        registerView('registration succeeded');
+
+    }).catch(status => {
+        if (status === 500) {
             registerView('user name taken. please select a different name');
-        } else {
-            registerView('registration succeeded');
         }
-    })
+    });
 }
 
 function loginView(note) {
@@ -314,28 +325,18 @@ function loginView(note) {
 }
 
 function loginValidation() {
-    const endPointStart = `http://localhost:3201/`;
     const params = {
         user: document.getElementById('user').value,
         pass: document.getElementById('pass').value
     };
-    
-    fetch(endPointStart + END_POINTS.login, {
-        method: METHODS.POST,
-        body: JSON.stringify(params),
-        headers: {
-            'Content-Type': 'application/json',
-        },
-    }).then(res => {
+    httpRequests(END_POINTS.login, METHODS.POST, params).then(token => {
         document.getElementById('user').value = '';
         document.getElementById('pass').value = '';
-        if (res.status === 500) {
+        localStorage.setItem(TOKEN_LOCAL_STORAGE_KEY, token);
+        navigate('cars');
+    }).catch(status => {
+        if (status === 401) {
             loginView('User Not Found');
-        } else {
-            res.text().then(token => {
-                localStorage.setItem(TOKEN_LOCAL_STORAGE_KEY, token);
-            })
-            navigate('cars');
         }
     })
 }
