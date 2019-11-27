@@ -8,16 +8,14 @@ const END_POINTS = {
     register:'register',
 }
 
-const loginEndPoint = 'http://localhost:3201/login';
-const registerEndPoint = 'http://localhost:3201/register';
-const TOKEN_LOCAL_STORAGE_KEY = 'token';
-
 var METHODS = {
     GET: 'GET',
     POST: 'POST',
     DELETE: 'DELETE',
     PUT: 'PUT'
 }
+
+const TOKEN_LOCAL_STORAGE_KEY = 'token';
 
 navbarEventListeners();
 
@@ -277,17 +275,15 @@ function registerView(note) {
 }
 
 function register() {
+    const endPointStart = `http://localhost:3201/`;
     const params = {
         user: document.getElementById('user').value,
         pass: document.getElementById('pass').value
     };
 
-    fetch(registerEndPoint, {
+    fetch(endPointStart + END_POINTS.register, {
         method: METHODS.POST,
-        body: JSON.stringify({
-            user: params.user,
-            pass: params.pass
-        }),
+        body: JSON.stringify(params),
         headers: {
             'Content-Type': 'application/json',
         },
@@ -318,12 +314,13 @@ function loginView(note) {
 }
 
 function loginValidation() {
+    const endPointStart = `http://localhost:3201/`;
     const params = {
         user: document.getElementById('user').value,
         pass: document.getElementById('pass').value
     };
     
-    fetch(loginEndPoint, {
+    fetch(endPointStart + END_POINTS.login, {
         method: METHODS.POST,
         body: JSON.stringify(params),
         headers: {

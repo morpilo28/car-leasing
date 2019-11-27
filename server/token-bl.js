@@ -1,7 +1,6 @@
 const dal = require('./dal');
 const FILE = './db/users.json';
 
-
 function isUserNameAlreadyExist(registerUser, callback) {
     dal.setDatabase(FILE);
     //checking if a userName already exist in the db
