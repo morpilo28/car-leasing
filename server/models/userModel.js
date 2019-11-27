@@ -1,7 +1,6 @@
-function Users(user, pass, token) {
+function Users(user, pass) {
     this.user = user;
     this.pass = pass;
-    this.token = token;
 }
 
 module.exports = {

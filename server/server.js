@@ -30,15 +30,15 @@ app.use((req, res, next) => {
             res.status(401).send();
         }
     }
-     console.log({
-        method: req.method,
-        path: req.path,
-        originalUrl: req.originalUrl,
-        body: req.body,
-        params: req.params,
-        query: req.query,
-        url: req.url
-    }) 
+    /*   console.log({
+         method: req.method,
+         path: req.path,
+         originalUrl: req.originalUrl,
+         body: req.body,
+         params: req.params,
+         query: req.query,
+         url: req.url
+     })  */
 })
 
 app.get('/cars', (req, res) => {
@@ -108,24 +108,23 @@ app.post('/login', function (req, res) {
         user: req.body.user,
         pass: req.body.pass,
     }
-
     tokensBl.validateUser(userToValidate, (e, user) => {
         if (e) {
             return res.status(500).send('no user has been found');
         } else {
-            return res.send(user.token);
+            const token = jwt.sign({
+                user: req.body.user
+            }, SECRET_KEY_FOR_JWT,
+                {
+                    expiresIn: '365d'
+                });
+            return res.send(token);
         }
     })
 });
 
 app.post('/register', function (req, res) {
-    const token = jwt.sign({
-        user: req.body.user
-    }, SECRET_KEY_FOR_JWT,
-        {
-            expiresIn: '365d'
-        });
-    const userToAdd = new userModel.Users(req.body.user, req.body.pass, token);
+    const userToAdd = new userModel.Users(req.body.user, req.body.pass);
     tokensBl.isUserNameAlreadyExist(userToAdd, (e) => {
         if (e) {
             res.status(500).send(e);

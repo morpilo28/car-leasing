@@ -1,14 +1,14 @@
 const dal = require('./dal');
-const FILE = './db/tokens.json';
+const FILE = './db/users.json';
 
 
 function isUserNameAlreadyExist(registerUser, callback) {
     dal.setDatabase(FILE);
+    //checking if a userName already exist in the db
     dal.readAll((e, allUserS) => {
         if (e) {
             callback(e);
         } else {
-            //checking if a userName already exist in the db
             let singleObj = allUserS.filter((obj) => obj.user === registerUser.user);
             if (singleObj.length > 0) {
                 callback('user name taken.');
@@ -32,12 +32,12 @@ function registerUser(userToAdd, callback) {
 
 function validateUser(userToValidate, callback) {
     dal.setDatabase(FILE);
+    //checking if a user exist in the db
     dal.readAll((e, allUserS) => {
         if (e) {
             callback(e);
         } else {
-            //checking if a user exist in the db
-            let singleObj = allUserS.filter((obj) => obj.user === userToValidate.user && obj.pass === userToValidate.pass && obj.token);
+            let singleObj = allUserS.filter((obj) => obj.user === userToValidate.user && obj.pass === userToValidate.pass);
             if (singleObj.length === 0) {
                 callback('no user has been found');
             } else if (singleObj.length > 1) {

@@ -322,6 +322,7 @@ function loginValidation() {
         user: document.getElementById('user').value,
         pass: document.getElementById('pass').value
     };
+    
     fetch(loginEndPoint, {
         method: METHODS.POST,
         body: JSON.stringify(params),
